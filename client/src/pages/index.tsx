@@ -58,6 +58,11 @@ export default function Home() {
     }
   };
 
+  const handleLogout = () => {
+    setAuthenticated(false);
+    setAddress("");
+  };
+
   const handleFetchBalances = async () => {
     try {
       await fetchBalances().unwrap();
@@ -83,9 +88,22 @@ export default function Home() {
   return (
     <Container maxWidth="sm">
       <Box sx={{ my: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom align="center">
-          Баланс криптовалют
-        </Typography>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mb: 4,
+          }}>
+          <Typography variant="h4" component="h1" align="center">
+            Баланс криптовалют
+          </Typography>
+          {isAuthenticated && (
+            <Button onClick={handleLogout} variant="contained" color="warning">
+              Выйти
+            </Button>
+          )}
+        </Box>
         {!isAuthenticated ? (
           <ImportForm
             onImport={handleImport}
@@ -106,7 +124,7 @@ export default function Home() {
               variant="contained"
               color="primary"
               fullWidth
-              sx={{ mt: 2, mb: 4 }}
+              sx={{ mb: 4 }}
               disabled={isBalancesLoading}>
               {isBalancesLoading ? (
                 <CircularProgress size={24} />

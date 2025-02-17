@@ -26,7 +26,7 @@ const CurrencySelector = ({
   };
 
   return (
-    <Box sx={{ mb: 4 }}>
+    <Box sx={{ m: 2 }}>
       <Typography variant="h6" gutterBottom>
         Выберите валюты
       </Typography>

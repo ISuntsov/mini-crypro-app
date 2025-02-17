@@ -53,7 +53,7 @@ cd ваш-репозиторий
 #### Установка зависимостей для фронтенда
 
 ```
-cd frontend
+cd ../client
 npm i
 ```
 
@@ -71,7 +71,7 @@ npm i
 Перейдите в папку server и запустите сервер:
 
 ```
-cd server
+cd ../server
 npm run dev
 ```
 
@@ -82,7 +82,7 @@ npm run dev
 Перейдите в папку frontend и запустите приложение:
 
 ```
-cd frontend
+cd ../client
 npm run dev
 ```
 

@@ -1,5 +1,9 @@
 import { useState } from "react";
-import { fetchBalances, importKey, updateCurrencies } from "../services/api";
+import {
+  useLazyFetchBalancesQuery,
+  useImportKeyMutation,
+  useUpdateCurrenciesMutation,
+} from "../services/api";
 import {
   Container,
   Box,
@@ -19,20 +23,22 @@ interface Balance {
 }
 
 export default function Home() {
-  const [balances, setBalances] = useState<Balance[]>([]);
   const [selectedCurrencies, setSelectedCurrencies] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [address, setAddress] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
+  const [fetchBalances, { data: balances = [], isLoading: isBalancesLoading }] =
+    useLazyFetchBalancesQuery();
+  const [importKey, { isLoading: isImporting }] = useImportKeyMutation();
+  const [updateCurrencies] = useUpdateCurrenciesMutation();
+
   const handleImport = async (key: string) => {
-    setIsLoading(true);
     setAddress("");
     setErrorMessage("");
 
     try {
-      const response = await importKey(key);
+      const response = await importKey({ key }).unwrap();
       setIsAuthenticated(true);
       setAddress(response.address || "");
     } catch (error) {
@@ -42,21 +48,14 @@ export default function Home() {
       } else {
         setErrorMessage("Произошла неизвестная ошибка.");
       }
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const handleFetchBalances = async () => {
-    setIsLoading(true);
-
     try {
-      const data = await fetchBalances();
-      setBalances(data);
+      await fetchBalances().unwrap();
     } catch (error) {
       console.error("Ошибка получения балансов:", error);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -64,7 +63,7 @@ export default function Home() {
     setSelectedCurrencies(currencies);
 
     try {
-      await updateCurrencies(currencies);
+      await updateCurrencies({ currencies }).unwrap();
     } catch (error) {
       console.error("Ошибка обновления валют:", error);
     }
@@ -83,14 +82,14 @@ export default function Home() {
         {!isAuthenticated ? (
           <ImportForm
             onImport={handleImport}
-            isLoading={isLoading}
+            isLoading={isImporting}
             errorMessage={errorMessage}
           />
         ) : (
           <>
             <Typography variant="body1" gutterBottom>
               Адрес кошелька: {address}
-            </Typography>{" "}
+            </Typography>
             <CurrencySelector
               selectedCurrencies={selectedCurrencies}
               onChange={handleCurrencyChange}
@@ -100,8 +99,13 @@ export default function Home() {
               variant="contained"
               color="primary"
               fullWidth
-              sx={{ mt: 2, mb: 4 }}>
-              Загрузка балансов
+              sx={{ mt: 2, mb: 4 }}
+              disabled={isBalancesLoading}>
+              {isBalancesLoading ? (
+                <CircularProgress size={24} />
+              ) : (
+                "Загрузка балансов"
+              )}
             </Button>
             <BalanceList balances={filteredBalances} />
           </>

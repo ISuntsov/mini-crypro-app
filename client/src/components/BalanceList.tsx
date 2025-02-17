@@ -1,5 +1,4 @@
 import { List, ListItem, ListItemText, Paper, Typography } from "@mui/material";
-import React from "react";
 
 interface Balance {
   currency: string;

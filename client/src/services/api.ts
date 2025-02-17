@@ -1,7 +1,5 @@
-import ky from "ky";
+import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { ethers } from "ethers";
-
-const api = ky.create({ prefixUrl: "/api" });
 
 interface Balance {
   currency: string;
@@ -15,38 +13,65 @@ interface ImportResponse {
   address?: string;
 }
 
-export const fetchBalances = async (): Promise<Balance[]> => {
-  return api.get("balances").json();
-};
+interface CurrenciesResponse {
+  success: boolean;
+  message: string;
+  currencies: string[];
+}
 
-export const importKey = async (key: string): Promise<ImportResponse> => {
-  if (!key.trim()) {
-    throw new Error("Ключ не может быть пустым");
-  }
+export const cryptoApi = createApi({
+  reducerPath: "cryptoApi",
+  // baseQuery: fetchBaseQuery({ baseUrl: "http://localhost:3001/api" }),
+  baseQuery: fetchBaseQuery({ baseUrl: "/api" }),
+  endpoints: (builder) => ({
+    importKey: builder.mutation<ImportResponse, { key: string }>({
+      query: (body) => {
+        let wallet;
+        const { key } = body;
+        if (!key.trim()) {
+          throw new Error("Ключ не может быть пустым");
+        }
 
-  try {
-    let wallet;
-    key.split(" ").length > 1
-      ? (wallet = ethers.Wallet.fromPhrase(key))
-      : (wallet = new ethers.Wallet(key));
+        try {
+          key.split(" ").length > 1
+            ? (wallet = ethers.Wallet.fromPhrase(key))
+            : (wallet = new ethers.Wallet(key));
 
-    const address = wallet.address;
+          const address = wallet.address;
 
-    console.log("Запрос на API с:", { key, address });
+          console.log("Запрос на API с:", { key: key, address });
 
-    const response: ImportResponse = await api
-      .post("import", { json: { key, address } })
-      .json();
+          return {
+            url: "/import",
+            method: "POST",
+            body: { key: key, address },
+          };
+        } catch (error) {
+          console.error(error);
+          throw new Error("Не удалось сгенерировать адрес кошелька.");
+        }
+      },
+    }),
 
-    return { ...response, address };
-  } catch (error) {
-    console.error(error);
-    throw new Error("Не удалось сгенерировать адрес кошелька.");
-  }
-};
+    updateCurrencies: builder.mutation<
+      CurrenciesResponse,
+      { currencies: string[] }
+    >({
+      query: (body) => ({
+        url: "/currencies",
+        method: "PUT",
+        body,
+      }),
+    }),
 
-export const updateCurrencies = async (
-  currencies: string[]
-): Promise<ImportResponse> => {
-  return api.put("currencies", { json: { currencies } }).json();
-};
+    fetchBalances: builder.query<Balance[], void>({
+      query: () => "/balances",
+    }),
+  }),
+});
+
+export const {
+  useImportKeyMutation,
+  useUpdateCurrenciesMutation,
+  useLazyFetchBalancesQuery,
+} = cryptoApi;

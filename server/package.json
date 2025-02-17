@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.ts",
   "scripts": {
-    "dev": "ts-node-dev --respawn src/index.ts",
+    "dev": "ts-node-dev --respawn --project tsconfig.json src/index.ts",
     "build": "tsc",
     "clean-ts-cache": "rm -rf .tsbuildinfo"
   },

@@ -1,9 +1,3 @@
-import { useState } from "react";
-import {
-  useLazyFetchBalancesQuery,
-  useImportKeyMutation,
-  useUpdateCurrenciesMutation,
-} from "../services/api";
 import {
   Container,
   Box,
@@ -11,27 +5,39 @@ import {
   CircularProgress,
   Typography,
 } from "@mui/material";
+import { useSelector } from "react-redux";
 
+import { useActionsAuth } from "../store/auth.reducer";
+import { useActionsCurrencies } from "../store/currencies.reducer";
+import { currencies } from "@/store/currencies.selector";
+import {
+  authStatusSelector,
+  authAddressSelector,
+  authErrorSelector,
+} from "@/store/auth.selector";
+
+import {
+  useLazyFetchBalancesQuery,
+  useImportKeyMutation,
+  useUpdateCurrenciesMutation,
+} from "../services/api";
 import ImportForm from "../components/ImportForm";
 import BalanceList from "../components/BalanceList";
 import CurrencySelector from "../components/CurrencySelector";
 
-interface Balance {
-  currency: string;
-  amount: number;
-  usdValue: number;
-}
-
 export default function Home() {
-  const [selectedCurrencies, setSelectedCurrencies] = useState<string[]>([]);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [address, setAddress] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
+  const isAuthenticated = useSelector(authStatusSelector);
+  const authAddress = useSelector(authAddressSelector);
+  const authError = useSelector(authErrorSelector);
+  const selectedCurrencies = useSelector(currencies);
 
   const [fetchBalances, { data: balances = [], isLoading: isBalancesLoading }] =
     useLazyFetchBalancesQuery();
   const [importKey, { isLoading: isImporting }] = useImportKeyMutation();
   const [updateCurrencies] = useUpdateCurrenciesMutation();
+
+  const { setAddress, setAuthenticated, setErrorMessage } = useActionsAuth();
+  const { setSelectedCurrencies } = useActionsCurrencies();
 
   const handleImport = async (key: string) => {
     setAddress("");
@@ -39,10 +45,11 @@ export default function Home() {
 
     try {
       const response = await importKey({ key }).unwrap();
-      setIsAuthenticated(true);
+      setAuthenticated(true);
       setAddress(response.address || "");
     } catch (error) {
-      setIsAuthenticated(false);
+      setAuthenticated(false);
+
       if (error instanceof Error) {
         setErrorMessage(error.message);
       } else {
@@ -83,12 +90,12 @@ export default function Home() {
           <ImportForm
             onImport={handleImport}
             isLoading={isImporting}
-            errorMessage={errorMessage}
+            errorMessage={authError}
           />
         ) : (
           <>
             <Typography variant="body1" gutterBottom>
-              Адрес кошелька: {address}
+              Адрес кошелька: {authAddress}
             </Typography>
             <CurrencySelector
               selectedCurrencies={selectedCurrencies}

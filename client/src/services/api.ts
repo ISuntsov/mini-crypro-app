@@ -21,8 +21,8 @@ interface CurrenciesResponse {
 
 export const cryptoApi = createApi({
   reducerPath: "cryptoApi",
-  // baseQuery: fetchBaseQuery({ baseUrl: "http://localhost:3001/api" }),
-  baseQuery: fetchBaseQuery({ baseUrl: "/api" }),
+  baseQuery: fetchBaseQuery({ baseUrl: "http://localhost:3001/api" }),
+  // baseQuery: fetchBaseQuery({ baseUrl: "/api" }),
   endpoints: (builder) => ({
     importKey: builder.mutation<ImportResponse, { key: string }>({
       query: (body) => {

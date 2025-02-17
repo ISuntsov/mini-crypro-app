@@ -22,7 +22,7 @@ const rates: { [key: string]: number } = {
 let selectedCurrencies = ["BTC", "ETH", "LTC", "XRP", "ADA"];
 
 export const handleImport = (req: Request, res: Response) => {
-  const { key, address } = req.body;
+  const { key } = req.body;
 
   if (!key) {
     return res.status(400).json({ error: "Требуется ключ" });
